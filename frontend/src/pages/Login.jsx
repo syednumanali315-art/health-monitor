@@ -1,95 +1,68 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    role: 'patient'
-  });
+export default function Login() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const onSubmit = async e => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const res = await axios.post(`${API_URL}/auth/login`, formData);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-
-      if (res.data.role === 'doctor') {
-        navigate('/doctor-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await login(username, password);
+      // Let the protected route or header redirect, or do it here
+      navigate('/'); 
     } catch (err) {
-      setError(err.response?.data?.msg || 'Error logging in');
+      setError(err.response?.data?.msg || 'Login failed');
     }
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2>Welcome Back</h2>
-        <p>Login to your health monitor</p>
-        
-        {error && <div className="error-message">{error}</div>}
-        
-        <form onSubmit={onSubmit}>
-          <div className="form-group">
-            <label>Login As</label>
-            <div className="role-switch">
-              <button 
-                type="button" 
-                className={formData.role === 'patient' ? 'active' : ''} 
-                onClick={() => setFormData({...formData, role: 'patient'})}
-              > Patient </button>
-              <button 
-                type="button" 
-                className={formData.role === 'doctor' ? 'active' : ''} 
-                onClick={() => setFormData({...formData, role: 'doctor'})}
-              > Doctor </button>
-            </div>
+    <div className="page active" id="page-login">
+      <div className="auth-wrap">
+        <div className="auth-box">
+          <div className="auth-card">
+            <div className="auth-title">Welcome Back</div>
+            <div className="auth-sub">Login with your username and password</div>
+            {error && <div className="alert alert-emergency">{error}</div>}
+            
+            <form onSubmit={handleLogin}>
+              <div className="form-group">
+                <label className="form-label">Username *</label>
+                <input 
+                  className="form-input" 
+                  type="text" 
+                  placeholder="Enter your username" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Password *</label>
+                <div className="pw-wrap">
+                  <input 
+                    className="form-input" 
+                    type="password" 
+                    placeholder="Enter password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary btn-full">Login</button>
+            </form>
+            
+            <div className="auth-divider">or</div>
+            <div className="auth-link">New user? <a onClick={() => navigate('/register')}>Register here</a></div>
+            <div className="auth-link" style={{marginTop:'6px'}}><a onClick={() => navigate('/')}>← Back to Home</a></div>
           </div>
-
-          <div className="form-group">
-            <label>Email Address</label>
-            <input 
-              type="email" 
-              name="email" 
-              value={formData.email} 
-              onChange={onChange} 
-              placeholder="Enter your email" 
-              required 
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Password</label>
-            <input 
-              type="password" 
-              name="password" 
-              value={formData.password} 
-              onChange={onChange} 
-              placeholder="Enter your password" 
-              required 
-            />
-          </div>
-
-          <button type="submit" className="login-btn">Login</button>
-        </form>
-        
-        <p className="register-link">
-          Don't have an account? <Link to="/register">Register here</Link>
-        </p>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HealthMonitor Cloud — Emergency Health System</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#30363d;
+  --text:#e6edf3;--text2:#8b949e;--text3:#656d76;
+  --blue:#58a6ff;--green:#3fb950;--red:#f85149;--amber:#e3b341;
+  --purple:#a371f7;--teal:#39d353;--cyan:#79c0ff;--pink:#f778ba;
+  --border:#30363d;--border2:#21262d;
+  --radius:10px;--radius-sm:6px;--radius-lg:14px;
+  --card:rgba(33,38,45,0.85);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.app{display:flex;flex-direction:column;min-height:100vh;}
+
+/* ── HEADER ── */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.logo-icon{width:36px;height:36px;background:#58a6ff18;border:1px solid #58a6ff44;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.logo-text{font-size:15px;font-weight:600;letter-spacing:-.3px;}
+.logo-sub{font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;}
+.nav{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+.nav-btn{padding:6px 14px;border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--text2);font-size:12px;cursor:pointer;transition:.15s;font-family:'IBM Plex Sans',sans-serif;}
+.nav-btn:hover{background:var(--bg3);color:var(--text);}
+.nav-btn.active{background:var(--bg3);border-color:var(--border);color:var(--text);}
+.user-chip{display:flex;align-items:center;gap:7px;padding:5px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:12px;}
+.user-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-patient{background:var(--teal);}
+.dot-doctor{background:var(--purple);}
+
+/* ── LAYOUT ── */
+main{flex:1;padding:20px 24px;max-width:1280px;width:100%;margin:0 auto;}
+.page{display:none;}
+.page.active{display:block;}
+.section-title{font-size:20px;font-weight:600;margin-bottom:4px;}
+.section-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;backdrop-filter:blur(8px);}
+.card-sm{padding:14px 16px;}
+.card-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;}
+.card-title-lg{font-size:14px;font-weight:600;margin-bottom:12px;}
+
+/* ── GRIDS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+
+/* ── VITAL CARDS ── */
+.vital-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:.2s;position:relative;overflow:hidden;}
+.vital-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--vcolor,var(--border));}
+.vital-card:hover{transform:translateY(-1px);}
+.vital-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-family:'IBM Plex Mono',monospace;}
+.vital-value{font-size:26px;font-weight:600;font-family:'IBM Plex Mono',monospace;line-height:1;}
+.vital-unit{font-size:12px;color:var(--text2);margin-left:3px;}
+.vital-status{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.4px;}
+.status-normal{background:#3fb95018;color:#3fb950;border:1px solid #3fb95044;}
+.status-low{background:#58a6ff18;color:#58a6ff;border:1px solid #58a6ff44;}
+.status-high{background:#e3b34118;color:#e3b341;border:1px solid #e3b34144;}
+.status-critical{background:#f8514918;color:#f85149;border:1px solid #f8514944;animation:flashBorder 1.5s infinite;}
+@keyframes flashBorder{0%,100%{border-color:#f8514988;}50%{border-color:#f85149ff;}}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:13px;}
+.form-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;font-weight:500;letter-spacing:.2px;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;transition:.15s;}
+.form-input:focus{border-color:#58a6ff66;box-shadow:0 0 0 3px #58a6ff11;}
+.form-input.error{border-color:#f8514966;box-shadow:0 0 0 2px #f8514911;}
+select.form-input{cursor:pointer;}
+textarea.form-input{resize:vertical;min-height:72px;}
+.field-error{font-size:10px;color:var(--red);margin-top:3px;display:none;}
+.field-error.show{display:block;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text);transition:.15s;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;}
+.btn:hover{background:var(--bg4);}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:#238636;border-color:#2ea04388;color:#fff;}
+.btn-primary:hover{background:#2ea043;}
+.btn-danger{background:#b91c1c18;border-color:#f8514944;color:#f85149;}
+.btn-danger:hover{background:#b91c1c33;}
+.btn-blue{background:#1e40af18;border-color:#58a6ff44;color:#58a6ff;}
+.btn-blue:hover{background:#1e40af33;}
+.btn-amber{background:#92400e18;border-color:#e3b34144;color:#e3b341;}
+.btn-amber:hover{background:#92400e33;}
+.btn-full{width:100%;justify-content:center;padding:10px 16px;font-size:14px;}
+.btn-sm{padding:5px 11px;font-size:11px;}
+
+/* ── ALERTS ── */
+.alert{border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:12px;font-size:13px;border-left:3px solid;}
+.alert-emergency{background:#f8514911;border-color:#f85149;color:#f85149;}
+.alert-warning{background:#e3b34111;border-color:#e3b341;color:#e3b341;}
+.alert-info{background:#58a6ff11;border-color:#58a6ff;color:#58a6ff;}
+.alert-success{background:#3fb95011;border-color:#3fb950;color:#3fb950;}
+
+/* ── EMERGENCY BANNER ── */
+.emergency-banner{background:#f8514911;border:1px solid #f8514966;border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;display:none;gap:14px;align-items:flex-start;}
+.emergency-banner.visible{display:flex;}
+.pulse{width:14px;height:14px;border-radius:50%;background:#f85149;flex-shrink:0;margin-top:3px;animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.4);}}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto;}
+.tab{padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;font-weight:500;}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ── SNS LOG ── */
+.sns-log{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;max-height:140px;overflow-y:auto;color:var(--green);line-height:1.8;}
+
+/* ── RISK ROWS ── */
+.risk-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2);}
+.risk-row:last-child{border-bottom:none;}
+.risk-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;}
+.risk-high{background:#f8514918;color:#f85149;border:1px solid #f8514944;}
+.risk-medium{background:#e3b34118;color:#e3b341;border:1px solid #e3b34144;}
+.risk-low{background:#3fb95018;color:#3fb950;border:1px solid #3fb95044;}
+.risk-info{font-size:12px;color:var(--text);}
+.risk-action{font-size:11px;color:var(--text2);margin-top:2px;}
+
+/* ── RX CARD ── */
+.rx-card{background:var(--bg2);border:1px solid #a371f733;border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+.rx-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.rx-name{font-weight:600;color:var(--purple);font-size:14px;}
+.rx-detail{font-size:11px;color:var(--text2);margin:2px 0;}
+
+/* ── PW TOGGLE ── */
+.pw-wrap{position:relative;}
+.pw-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;background:none;border:none;color:var(--text2);font-size:14px;padding:2px;}
+
+/* ── FEVER TIP ── */
+.fever-tip{background:#e3b34111;border:1px solid #e3b34133;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--amber);margin-top:10px;}
+
+/* ══════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════ */
+.hero{text-align:center;padding:52px 16px 36px;}
+.hero h1{font-size:30px;font-weight:600;letter-spacing:-.4px;line-height:1.25;margin-bottom:12px;}
+.hero h1 span{color:var(--blue);}
+.hero p{font-size:14px;color:var(--text2);max-width:540px;margin:0 auto 28px;}
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:30px;}
+.hero-badge{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);}
+.hero-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.hero-actions .btn{padding:10px 24px;font-size:14px;}
+
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:32px 0;}
+.feature-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;text-align:center;transition:.2s;}
+.feature-card:hover{border-color:#58a6ff33;transform:translateY(-2px);}
+.feature-icon{font-size:28px;margin-bottom:10px;display:block;}
+.feature-title{font-size:13px;font-weight:600;margin-bottom:4px;}
+.feature-desc{font-size:11px;color:var(--text2);line-height:1.6;}
+
+.how-row{display:flex;gap:0;margin:24px 0;flex-wrap:wrap;}
+.how-step{flex:1;min-width:120px;text-align:center;padding:14px 8px;position:relative;}
+.how-step:not(:last-child)::after{content:'→';position:absolute;right:-6px;top:24px;color:var(--text3);font-size:16px;}
+.how-num{width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);margin:0 auto 7px;}
+.how-label{font-size:11px;color:var(--text2);}
+
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0;}
+.role-card{border:1px solid var(--border);border-radius:var(--radius);padding:22px;text-align:center;cursor:pointer;transition:.2s;background:var(--bg2);}
+.role-card:hover{transform:translateY(-2px);}
+.role-card.pat:hover{border-color:#3fb95066;}
+.role-card.doc:hover{border-color:#a371f766;}
+.role-icon{font-size:36px;margin-bottom:10px;display:block;}
+.role-title{font-size:16px;font-weight:600;margin-bottom:5px;}
+.role-desc{font-size:11px;color:var(--text2);}
+
+/* ══════════════════════════════════════
+   AUTH PAGES
+══════════════════════════════════════ */
+.auth-wrap{min-height:calc(100vh - 66px);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;}
+.auth-box{width:100%;max-width:520px;}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;}
+.auth-title{font-size:19px;font-weight:600;margin-bottom:3px;}
+.auth-sub{font-size:12px;color:var(--text2);margin-bottom:20px;}
+.role-toggle{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px;margin-bottom:18px;}
+.rt-btn{flex:1;padding:7px;text-align:center;border-radius:5px;font-size:13px;cursor:pointer;color:var(--text2);transition:.15s;border:none;background:transparent;font-family:'IBM Plex Sans',sans-serif;}
+.rt-btn.active{background:var(--bg);color:var(--text);font-weight:500;}
+.auth-divider{text-align:center;font-size:11px;color:var(--text3);margin:14px 0;position:relative;}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:43%;height:1px;background:var(--border);}
+.auth-divider::before{left:0;}.auth-divider::after{right:0;}
+.auth-link{font-size:12px;color:var(--text2);text-align:center;margin-top:12px;}
+.auth-link a{color:var(--blue);cursor:pointer;}
+.auth-link a:hover{text-decoration:underline;}
+
+/* ══════════════════════════════════════
+   DASHBOARD SHARED
+══════════════════════════════════════ */
+.dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.db-title{font-size:18px;font-weight:600;}
+.db-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.profile-chip{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;}
+.profile-avatar{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;}
+.profile-name{font-size:14px;font-weight:600;}
+.profile-meta{font-size:11px;color:var(--text2);}
+
+/* STAT MINI CARDS */
+.stat-mini{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.stat-mini-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.stat-mini-val{font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;line-height:1.1;}
+.stat-mini-unit{font-size:11px;color:var(--text2);}
+.stat-mini-status{margin-top:6px;}
+
+/* PATIENT LIST (doctor) */
+.patient-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:.15s;}
+.patient-row:hover{border-color:#58a6ff33;}
+.patient-row.high-risk{border-color:#f8514944;}
+.pr-avatar{width:34px;height:34px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;}
+.pr-name{font-size:13px;font-weight:500;}
+.pr-meta{font-size:11px;color:var(--text2);}
+.pr-right{margin-left:auto;text-align:right;}
+
+/* ══════════════════════════════════════
+   EMERGENCY ADVICE
+══════════════════════════════════════ */
+.advice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.advice-card{border-radius:var(--radius);padding:16px;}
+.advice-do{background:#3fb95011;border:1px solid #3fb95033;}
+.advice-dont{background:#f8514911;border:1px solid #f8514933;}
+.advice-title{font-size:13px;font-weight:600;margin-bottom:10px;}
+.advice-do .advice-title{color:var(--green);}
+.advice-dont .advice-title{color:var(--red);}
+.advice-item{display:flex;align-items:flex-start;gap:7px;font-size:12px;margin-bottom:7px;color:var(--text2);}
+.advice-item:last-child{margin-bottom:0;}
+.advice-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.advice-do .advice-dot{background:var(--green);}
+.advice-dont .advice-dot{background:var(--red);}
+
+/* ══════════════════════════════════════
+   EMERGENCY HELPLINE CARD
+══════════════════════════════════════ */
+.helpline-card{background:#f8514911;border:2px solid #f8514966;border-radius:var(--radius);padding:18px;}
+.helpline-title{font-size:14px;font-weight:600;color:var(--red);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.helpline-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f8514922;}
+.helpline-row:last-child{border-bottom:none;}
+.helpline-label{font-size:12px;color:var(--text2);}
+.helpline-num{font-size:15px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--red);}
+
+/* ══════════════════════════════════════
+   REPORTS SECTION
+══════════════════════════════════════ */
+.report-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.report-icon{font-size:22px;flex-shrink:0;}
+.report-name{font-size:13px;font-weight:500;}
+.report-meta{font-size:11px;color:var(--text2);}
+.report-actions{margin-left:auto;display:flex;gap:6px;}
+
+/* ══════════════════════════════════════
+   MEDICATIONS
+══════════════════════════════════════ */
+.med-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;}
+.med-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.med-name{font-size:13px;font-weight:600;margin-bottom:3px;}
+.med-detail{font-size:11px;color:var(--text2);line-height:1.7;}
+.med-status{margin-left:auto;flex-shrink:0;}
+.med-active{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;background:#3fb95018;color:var(--green);border:1px solid #3fb95044;}
+.med-inactive{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
+
+/* ══════════════════════════════════════
+   AI CHATBOT
+══════════════════════════════════════ */
+.chatbot-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.chatbot-header{background:var(--bg2);padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.chatbot-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.chatbot-msgs{padding:14px;height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{max-width:80%;padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.6;}
+.chat-bot{background:var(--bg2);border:1px solid var(--border);align-self:flex-start;border-radius:4px 10px 10px 10px;}
+.chat-user{background:#1e40af33;border:1px solid #58a6ff33;color:var(--cyan);align-self:flex-end;border-radius:10px 4px 10px 10px;}
+.chatbot-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--bg2);}
+.chatbot-input input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 11px;color:var(--text);font-size:12px;font-family:'IBM Plex Sans',sans-serif;outline:none;}
+.chatbot-input input:focus{border-color:#58a6ff66;}
+.chatbot-disclaimer{font-size:10px;color:var(--text3);padding:6px 14px;text-align:center;background:var(--bg2);border-top:1px solid var(--border);}
+
+/* ══════════════════════════════════════
+   UPLOAD ZONE
+══════════════════════════════════════ */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:28px;text-align:center;cursor:pointer;transition:.2s;}
+.upload-zone:hover{border-color:#58a6ff66;background:#58a6ff06;}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.upload-text{font-size:13px;color:var(--text2);}
+.upload-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* ══════════════════════════════════════
+   SNS STATUS
+══════════════════════════════════════ */
+.sns-status{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;}
+.sns-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sns-ready{background:var(--green);}
+.sns-sent{background:var(--amber);animation:pulse 1.5s infinite;}
+.sns-label{font-size:12px;}
+.sns-time{font-size:11px;color:var(--text3);margin-left:auto;font-family:'IBM Plex Mono',monospace;}
+
+/* ══════════════════════════════════════
+   BADGE / PILL
+══════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-blue{background:#58a6ff18;color:var(--blue);border:1px solid #58a6ff33;}
+.badge-green{background:#3fb95018;color:var(--green);border:1px solid #3fb95033;}
+.badge-red{background:#f8514918;color:var(--red);border:1px solid #f8514933;}
+.badge-amber{background:#e3b34118;color:var(--amber);border:1px solid #e3b34133;}
+.badge-purple{background:#a371f718;color:var(--purple);border:1px solid #a371f733;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  header{flex-direction:column;gap:8px;padding:10px 14px;}
+  main{padding:14px;}
+  .grid2,.grid3,.grid4,.grid5,.form-row,.form-row-3,.role-cards,.advice-grid{grid-template-columns:1fr;}
+  .how-step::after{display:none;}
+  .hero h1{font-size:22px;}
+  .hero{padding:36px 12px 24px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header>
+  <div class="logo" onclick="goHome()">
+    <div class="logo-icon">🏥</div>
+    <div>
+      <div class="logo-text">HealthMonitor Cloud</div>
+      <div class="logo-sub">Emergency Health Monitoring System</div>
+    </div>
+  </div>
+  <nav class="nav" id="main-nav">
+    <span class="user-chip" id="nav-chip" style="display:none;">
+      <span class="user-dot" id="nav-dot"></span>
+      <span id="nav-uname" style="font-weight:500;"></span>
+      <span id="nav-role" style="opacity:.6;font-size:10px;"></span>
+    </span>
+    <button class="nav-btn" id="nb-home"      onclick="goHome()"          style="display:none;">🏠 Home</button>
+    <button class="nav-btn" id="nb-dash"      onclick="gotoDashboard()"   style="display:none;">Dashboard</button>
+    <button class="nav-btn" id="nb-emergency" onclick="showPage('emerg')" style="display:none;">🚨 Emergency</button>
+    <button class="nav-btn" id="nb-sysinfo"   onclick="showPage('admin')" style="display:none;">System</button>
+    <button class="nav-btn btn-danger"id="nb-logout" onclick="logout()"   style="display:none;font-size:11px;">Logout</button>
+  </nav>
+</header>
+
+<main id="main-content">
+
+<!-- ══════════════════════════════════════════
+     PAGE: LANDING
+══════════════════════════════════════════ -->
+<div class="page active" id="page-landing">
+  <div class="hero">
+    <h1>Cloud-Based <span>Emergency</span><br>Health Monitoring</h1>
+    <p>Monitor heart rate, blood pressure, oxygen, sugar and temperature in real time. Detect emergencies early, alert doctors instantly, and keep patients safe.</p>
+    <div class="hero-badges">
+      <div class="hero-badge">❤️ Heart Rate</div>
+      <div class="hero-badge">🌡️ Temperature</div>
+      <div class="hero-badge">🩸 Blood Pressure</div>
+      <div class="hero-badge">🍬 Blood Sugar</div>
+      <div class="hero-badge">🫁 Oxygen</div>
+      <div class="hero-badge">🚨 SNS Alerts</div>
+      <div class="hero-badge">🤖 AI Chatbot</div>
+      <div class="hero-badge">📋 Reports</div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showPage('register')">Get Started — Register</button>
+      <button class="btn btn-blue"    onclick="showPage('login')">Login to My Account</button>
+    </div>
+  </div>
+
+  <!-- FEATURE CARDS -->
+  <div class="feature-grid">
+    <div class="feature-card"><span class="feature-icon">📊</span><div class="feature-title">Real-Time Vitals</div><div class="feature-desc">Live monitoring of all key health signs with instant Low / Normal / High status.</div></div>
+    <div class="feature-card"><span class="feature-icon">⚠️</span><div class="feature-title">Risk Detection</div><div class="feature-desc">System detects dangerous values and shows possible conditions immediately.</div></div>
+    <div class="feature-card"><span class="feature-icon">👨‍⚕️</span><div class="feature-title">Doctor Review</div><div class="feature-desc">Doctors see all patients, add prescriptions, review reports and flag emergencies.</div></div>
+    <div class="feature-card"><span class="feature-icon">🚑</span><div class="feature-title">Emergency Alerts</div><div class="feature-desc">Critical values trigger AWS SNS alerts to doctor, family and emergency contact.</div></div>
+    <div class="feature-card"><span class="feature-icon">🤖</span><div class="feature-title">AI Chatbot</div><div class="feature-desc">Get quick guidance on readings, medicines and what to do in emergencies.</div></div>
+    <div class="feature-card"><span class="feature-icon">📋</span><div class="feature-title">Reports &amp; Meds</div><div class="feature-desc">Upload, view and download reports. Track all prescribed medications.</div></div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="card" style="margin:20px 0;">
+    <div class="card-title">How It Works</div>
+    <div class="how-row">
+      <div class="how-step"><div class="how-num">1</div><div class="how-label">Patient registers</div></div>
+      <div class="how-step"><div class="how-num">2</div><div class="how-label">Login</div></div>
+      <div class="how-step"><div class="how-num">3</div><div class="how-label">Enter vitals</div></div>
+      <div class="how-step"><div class="how-num">4</div><div class="how-label">System analyses</div></div>
+      <div class="how-step"><div class="how-num">5</div><div class="how-label">Doctor reviews</div></div>
+      <div class="how-step"><div class="how-num">6</div><div class="how-label">Prescription added</div></div>
+      <div class="how-step"><div class="how-num">7</div><div class="how-label">SNS alert if critical</div></div>
+    </div>
+  </div>
+
+  <!-- ROLE SELECTION -->
+  <div class="card">
+    <div class="card-title">Choose Your Role</div>
+    <div class="role-cards">
+      <div class="role-card pat" onclick="showRegister('patient')">
+        <span class="role-icon">🧑‍💼</span>
+        <div class="role-title">I am a Patient</div>
+        <div class="role-desc">Register to track vitals, view conditions, manage reports and prescriptions, and get AI health guidance.</div>
+        <button class="btn btn-primary" style="margin-top:12px;">Register as Patient</button>
+      </div>
+      <div class="role-card doc" onclick="showRegister('doctor')">
+        <span class="role-icon">👨‍⚕️</span>
+        <div class="role-title">I am a Doctor</div>
+        <div class="role-desc">Register to monitor patients, review vitals, add prescriptions, manage reports and respond to emergencies.</div>
+        <button class="btn" style="margin-top:12px;border-color:#a371f766;color:var(--purple);">Register as Doctor</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE: REGISTER
+══════════════════════════════════════════ -->
+<div class="page" id="page-register">
+<div class="auth-wrap">
+<div class="auth-box">
+<div class="auth-card">
+  <div class="auth-title">Create Account</div>
+  <div class="auth-sub">Fill in the form below to get started</div>
+  <div class="role-toggle">
+    <button class="rt-btn active" id="rt-pat" onclick="switchRegRole('patient')">🧑‍💼 Patient</button>
+    <button class="rt-btn" id="rt-doc" onclick="switchRegRole('doctor')">👨‍⚕️ Doctor</button>
+  </div>
+  <div class="alert alert-emergency" id="reg-err" style="display:none;"></div>
+
+  <!-- COMMON FIELDS -->
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Full Name *</label>
+      <input class="form-input" id="r-name" type="text" placeholder="Your full name" oninput="ce('r-name')"/>
+      <div class="field-error" id="fe-r-name">Full name is required.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username * <span style="font-weight:400;color:var(--text3)">(used to login)</span></label>
+      <input class="form-input" id="r-user" type="text" placeholder="Min 3 characters" oninput="ce('r-user')"/>
+      <div class="field-error" id="fe-r-user">Username must be at least 3 characters.</div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Email (optional)</label>
+    <input class="form-input" id="r-email" type="email" placeholder="your@email.com"/>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Password *</label>
+      <div class="pw-wrap">
+        <input class="form-input" id="r-pw" type="password" placeholder="Min 6 characters" oninput="ce('r-pw')"/>
+        <button class="pw-eye" onclick="togglePw('r-pw')">👁</button>
+      </div>
+      <div class="field-error" id="fe-r-pw">Password must be at least 6 characters.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Confirm Password *</label>
+      <div class="pw-wrap">
+        <input class="form-input" id="r-cpw" type="password" placeholder="Re-enter password" oninput="ce('r-cpw')"/>
+        <button class="pw-eye" onclick="togglePw('r-cpw')">👁</button>
+      </div>
+      <div class="field-error" id="fe-r-cpw">Passwords do not match.</div>
+    </div>
+  </div>
+
+  <!-- PATIENT FIELDS -->
+  <div id="pat-fields">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Age * <span style="font-weight:400;color:var(--text3)">(0–100 years only)</span></label>
+        <input class="form-input" id="r-age" type="number" min="0" max="100" placeholder="e.g. 30" oninput="ce('r-age')"/>
+        <div class="field-error" id="fe-r-age">Age must be between 0 and 100.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gender *</label>
+        <select class="form-input" id="r-gender" onchange="ce('r-gender')">
+          <option value="">Select gender</option>
+          <option>Male</option><option>Female</option><option>Other</option>
+        </select>
+        <div class="field-error" id="fe-r-gender">Please select gender.</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Mobile Number *</label>
+        <input class="form-input" id="r-mobile" type="tel" placeholder="+91 9999999999" oninput="ce('r-mobile')"/>
+        <div class="field-error" id="fe-r-mobile">Mobile number is required.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Emergency Contact Number *</label>
+        <input class="form-input" id="r-emcontact" type="tel" placeholder="+91 9888888888" oninput="ce('r-emcontact')"/>
+        <div class="field-error" id="fe-r-emcontact">Emergency contact is required.</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address</label>
+      <input class="form-input" id="r-address" type="text" placeholder="House, Street, City"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Disease / Medical History (optional)</label>
+      <textarea class="form-input" id="r-history" placeholder="e.g. Diabetes, Hypertension, Asthma..."></textarea>
+    </div>
+  </div>
+
+  <!-- DOCTOR FIELDS -->
+  <div id="doc-fields" style="display:none;">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Specialization</label>
+        <input class="form-input" id="r-spec" type="text" placeholder="e.g. Cardiologist"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Experience (years)</label>
+        <input class="form-input" id="r-exp" type="number" min="0" placeholder="e.g. 10"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Hospital / Clinic Name</label>
+      <input class="form-input" id="r-hospital" type="text" placeholder="e.g. City Medical Center"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Doctor Mobile Number</label>
+      <input class="form-input" id="r-docmobile" type="tel" placeholder="+91 9777777777"/>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-full" onclick="handleRegister()" style="margin-top:4px;">Create Account</button>
+  <div class="auth-divider">or</div>
+  <div class="auth-link">Already have an account? <a onclick="showPage('login')">Login here</a></div>
+  <div class="auth-link" style="margin-top:6px;"><a onclick="showPage('landing')">← Back to Home</a></div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE: LOGIN
+══════════════════════════════════════════ -->
+<div class="page" id="page-login">
+<div class="auth-wrap">
+<div class="auth-box">
+<div class="auth-card">
+  <div class="auth-title">Welcome Back</div>
+  <div class="auth-sub">Login with your username and password</div>
+  <div class="alert alert-emergency" id="login-err" style="display:none;"></div>
+  <div class="alert alert-success"   id="login-ok"  style="display:none;"></div>
+  <div class="form-group">
+    <label class="form-label">Username *</label>
+    <input class="form-input" id="l-user" type="text" placeholder="Enter your username" oninput="ce('l-user')"/>
+    <div class="field-error" id="fe-l-user">Username is required.</div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Password *</label>
+    <div class="pw-wrap">
+      <input class="form-input" id="l-pw" type="password" placeholder="Enter password" oninput="ce('l-pw')"/>
+      <button class="pw-eye" onclick="togglePw('l-pw')">👁</button>
+    </div>
+    <div class="field-error" id="fe-l-pw">Password is required.</div>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="handleLogin()">Login</button>
+  <div class="auth-divider">or</div>
+  <div class="auth-link">New user? <a onclick="showPage('register')">Register here</a></div>
+  <div class="auth-link" style="margin-top:6px;"><a onclick="showPage('landing')">← Back to Home</a></div>
+  <!-- Demo hint -->
+  <div style="margin-top:18px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;">
+    <div style="font-size:11px;font-weight:600;margin-bottom:6px;color:var(--text);">Demo Accounts</div>
+    <div style="font-size:11px;color:var(--text2);">Patient → <code style="color:var(--green);">patient1</code> / <code style="color:var(--green);">pass123</code></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:4px;">Doctor → <code style="color:var(--purple);">doctor1</code> / <code style="color:var(--purple);">doc123</code></div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE: PATIENT DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page" id="page-patient">
+
+  <!-- Emergency Banner -->
+  <div class="emergency-banner" id="em-banner">
+    <div class="pulse"></div>
+    <div style="flex:1;">
+      <div style="font-weight:600;color:var(--red);font-size:14px;">🚨 Emergency Alert Triggered</div>
+      <div id="em-msg" style="font-size:12px;color:var(--red);margin-top:3px;"></div>
+      <div id="em-time" style="font-size:10px;color:var(--text3);margin-top:2px;font-family:monospace;"></div>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="showPage('emerg')">View Emergency Info</button>
+  </div>
+
+  <div class="dashboard-header">
+    <div>
+      <div class="db-title">Patient Dashboard</div>
+      <div class="db-sub">Monitor your health, view reports and prescriptions</div>
+    </div>
+    <div class="profile-chip" id="pat-profile-chip">
+      <div class="profile-avatar" id="pat-avatar">P</div>
+      <div>
+        <div class="profile-name" id="pat-name-display">—</div>
+        <div class="profile-meta" id="pat-meta-display">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATIENT TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('p','p-vitals',this)">📊 Vitals</div>
+    <div class="tab" onclick="showTab('p','p-reports',this)">📋 Reports</div>
+    <div class="tab" onclick="showTab('p','p-meds',this)">💊 Medications</div>
+    <div class="tab" onclick="showTab('p','p-chat',this)">🤖 AI Chatbot</div>
+    <div class="tab" onclick="showTab('p','p-profile',this)">👤 My Profile</div>
+  </div>
+
+  <!-- TAB: VITALS -->
+  <div class="tab-content active" id="p-vitals">
+    <!-- Vitals Input -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Enter Health Readings</div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Age Group</label>
+          <select class="form-input" id="ageGroup" onchange="analyseVitals()">
+            <option value="adult">Adult (18+)</option>
+            <option value="newborn">Newborn (0–1 mo)</option>
+            <option value="infant">Infant (1–12 mo)</option>
+            <option value="toddler">Toddler (1–3 yr)</option>
+            <option value="child">Child (3–12 yr)</option>
+            <option value="teen">Teen (12–18 yr)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Heart Rate (bpm)</label>
+          <input class="form-input" type="number" id="heartRate" placeholder="e.g. 75" oninput="analyseVitals()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Pressure (sys/dia)</label>
+          <input class="form-input" type="text" id="bloodPressure" placeholder="e.g. 120/80" oninput="analyseVitals()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Oxygen (SpO₂ %)</label>
+          <input class="form-input" type="number" id="oxygen" placeholder="e.g. 98" oninput="analyseVitals()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Sugar (mg/dL)</label>
+          <input class="form-input" type="number" id="sugar" placeholder="e.g. 90" oninput="analyseVitals()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temperature (°F)</label>
+          <input class="form-input" type="number" id="temperature" placeholder="e.g. 98.6" step="0.1" oninput="analyseVitals()"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        <button class="btn btn-primary" onclick="analyseVitals()">🔍 Analyse</button>
+        <button class="btn" onclick="loadSampleData()">Load Normal Sample</button>
+        <button class="btn btn-danger" onclick="loadCriticalData()">Load Critical Sample</button>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="grid5" style="margin-bottom:14px;" id="vitals-grid">
+      <div class="vital-card" style="--vcolor:var(--red);">
+        <div class="vital-label">Heart Rate</div>
+        <div><span class="vital-value" id="v-hr">--</span><span class="vital-unit">bpm</span></div>
+        <div id="s-hr"></div>
+      </div>
+      <div class="vital-card" style="--vcolor:var(--blue);">
+        <div class="vital-label">Blood Pressure</div>
+        <div><span class="vital-value" id="v-bp" style="font-size:18px;">--/--</span><span class="vital-unit">mmHg</span></div>
+        <div id="s-bp"></div>
+      </div>
+      <div class="vital-card" style="--vcolor:var(--cyan);">
+        <div class="vital-label">Oxygen SpO₂</div>
+        <div><span class="vital-value" id="v-o2">--</span><span class="vital-unit">%</span></div>
+        <div id="s-o2"></div>
+      </div>
+      <div class="vital-card" style="--vcolor:var(--amber);">
+        <div class="vital-label">Blood Sugar</div>
+        <div><span class="vital-value" id="v-su">--</span><span class="vital-unit">mg/dL</span></div>
+        <div id="s-su"></div>
+      </div>
+      <div class="vital-card" style="--vcolor:var(--amber);">
+        <div class="vital-label">Temperature</div>
+        <div><span class="vital-value" id="v-tmp">--</span><span class="vital-unit">°F</span></div>
+        <div id="s-tmp"></div>
+        <div id="fever-guidance"></div>
+      </div>
+    </div>
+
+    <!-- Overall Status -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Overall Health Status</div>
+      <div id="overall-status" style="font-size:16px;font-weight:600;color:var(--text2);">Enter vitals above to see your health status.</div>
+    </div>
+
+    <!-- Condition + Risk -->
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">Condition Now</div>
+        <div id="condition-now" style="font-size:12px;color:var(--text2);">No vitals entered yet.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Possible Risks</div>
+        <div id="risk-list"></div>
+      </div>
+    </div>
+
+    <!-- Next Action + Medicines -->
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">Next Action</div>
+        <div id="next-action" style="font-size:12px;color:var(--text2);">Enter vitals to see recommended next steps.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Doctor Prescribed Medicines</div>
+        <div id="prescribed-medicines"><div style="font-size:12px;color:var(--text2);">No prescriptions yet. Doctor will add after review.</div></div>
+      </div>
+    </div>
+
+    <!-- SNS Alert Log -->
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Emergency Alert Log (SNS)</span>
+        <button class="btn btn-sm" onclick="clearAlerts()">Clear</button>
+      </div>
+      <div class="sns-log" id="sns-log">[ System ready. No alerts triggered. ]</div>
+    </div>
+  </div>
+
+  <!-- TAB: REPORTS -->
+  <div class="tab-content" id="p-reports">
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Upload Report</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Report Category</label>
+          <select class="form-input" id="rpt-cat">
+            <option value="">Select category</option>
+            <option>Blood Test</option><option>BP Report</option>
+            <option>Sugar Report</option><option>Asthma / Respiratory</option>
+            <option>Prescription</option><option>Scan / Imaging</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Report Name</label>
+          <input class="form-input" id="rpt-name" type="text" placeholder="e.g. Blood Test Oct 2024"/>
+        </div>
+      </div>
+      <div class="upload-zone" onclick="simulateUpload()">
+        <div class="upload-icon">📂</div>
+        <div class="upload-text">Click to upload report</div>
+        <div class="upload-sub">Supports PDF, JPG, PNG — Max 10MB</div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:10px;" onclick="addReport()">➕ Add Report</button>
+    </div>
+    <div class="card">
+      <div class="card-title">My Reports</div>
+      <div id="reports-list"><div style="font-size:12px;color:var(--text2);">No reports uploaded yet.</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: MEDICATIONS -->
+  <div class="tab-content" id="p-meds">
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">My Medications</div>
+      <div id="pat-meds-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Add Medication (Self-tracked)</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Medicine Name</label>
+          <input class="form-input" id="sm-name" type="text" placeholder="e.g. Metformin 500mg"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-input" id="sm-type">
+            <option>BP Tablet</option><option>Sugar Tablet</option>
+            <option>Insulin</option><option>Asthma Inhaler</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dosage</label>
+          <input class="form-input" id="sm-dose" type="text" placeholder="e.g. 1 tablet"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Timing</label>
+          <input class="form-input" id="sm-time" type="text" placeholder="e.g. Morning after food"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addSelfMed()">➕ Add Medication</button>
+    </div>
+  </div>
+
+  <!-- TAB: AI CHATBOT -->
+  <div class="tab-content" id="p-chat">
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">AI Health Assistant</div>
+      <div class="chatbot-wrap">
+        <div class="chatbot-header">
+          <div class="chatbot-dot"></div>
+          <div style="font-size:13px;font-weight:500;">HealthBot</div>
+          <div style="font-size:11px;color:var(--text2);margin-left:6px;">Patient Assistant</div>
+        </div>
+        <div class="chatbot-msgs" id="pat-chat-msgs">
+          <div class="chat-msg chat-bot">👋 Hello! I am HealthBot. I can help you understand your health readings, medicine reminders, and basic emergency advice. How can I help you today?</div>
+        </div>
+        <div class="chatbot-input">
+          <input type="text" id="pat-chat-in" placeholder="Ask about your health readings..." onkeydown="if(event.key==='Enter')sendPatChat()"/>
+          <button class="btn btn-primary btn-sm" onclick="sendPatChat()">Send</button>
+        </div>
+        <div class="chatbot-disclaimer">⚠️ This chatbot gives basic guidance only. It is not a replacement for a real doctor in critical emergencies. Always call your doctor for serious concerns.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Questions</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;">
+        <button class="btn btn-sm" onclick="quickChat('What does my heart rate mean?')">What does my heart rate mean?</button>
+        <button class="btn btn-sm" onclick="quickChat('What should I do if oxygen is low?')">Low oxygen — what to do?</button>
+        <button class="btn btn-sm" onclick="quickChat('Is my blood pressure normal?')">Is my BP normal?</button>
+        <button class="btn btn-sm" onclick="quickChat('Medicine reminder — what time should I take tablets?')">Medicine reminder</button>
+        <button class="btn btn-sm" onclick="quickChat('What are emergency signs I should watch for?')">Emergency warning signs</button>
+        <button class="btn btn-sm" onclick="quickChat('Basic health tips for me')">Basic health tips</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PROFILE -->
+  <div class="tab-content" id="p-profile">
+    <div class="card">
+      <div class="card-title">My Profile</div>
+      <div id="pat-profile-detail" style="font-size:13px;color:var(--text2);">Loading profile...</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE: DOCTOR DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page" id="page-doctor">
+  <div class="dashboard-header">
+    <div>
+      <div class="db-title">Doctor Dashboard</div>
+      <div class="db-sub">Monitor patients, review vitals, manage prescriptions and respond to emergencies</div>
+    </div>
+    <div class="profile-chip" id="doc-profile-chip">
+      <div class="profile-avatar" id="doc-avatar" style="background:#a371f718;border-color:#a371f744;color:var(--purple);">D</div>
+      <div>
+        <div class="profile-name" id="doc-name-display">—</div>
+        <div class="profile-meta" id="doc-meta-display">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('d','d-patients',this)">👥 Patients</div>
+    <div class="tab" onclick="showTab('d','d-prescribe',this)">💊 Prescriptions</div>
+    <div class="tab" onclick="showTab('d','d-reports',this)">📋 Reports</div>
+    <div class="tab" onclick="showTab('d','d-alerts',this)">🚨 Alerts</div>
+    <div class="tab" onclick="showTab('d','d-chat',this)">🤖 AI Assistant</div>
+  </div>
+
+  <!-- TAB: PATIENTS -->
+  <div class="tab-content active" id="d-patients">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Assigned Patients</div>
+        <div id="doc-patient-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Selected Patient Vitals</div>
+        <div id="doc-vitals-view" style="font-size:12px;color:var(--text2);">Select a patient from the list to view their vitals.</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;" class="grid2">
+      <div class="card">
+        <div class="card-title">Risk Summary</div>
+        <div id="doc-risk-summary" style="font-size:12px;color:var(--text2);">No data.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Doctor Notes</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <textarea class="form-input" id="doctor-notes" placeholder="Enter clinical notes for selected patient..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="saveDoctorNotes()">💾 Save Notes</button>
+          <button class="btn btn-danger btn-sm" onclick="markEmergency()">🚨 Flag Emergency</button>
+        </div>
+        <div id="notes-saved" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PRESCRIPTIONS -->
+  <div class="tab-content" id="d-prescribe">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title-lg">Add Prescription</div>
+        <div class="form-group">
+          <label class="form-label">Patient</label>
+          <select class="form-input" id="rx-patient-sel">
+            <option>John Doe (P-001) — Demo Patient</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Medicine Name *</label>
+            <input class="form-input" type="text" id="rx-name" placeholder="e.g. Paracetamol 500mg"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Medicine Type</label>
+            <select class="form-input" id="rx-type">
+              <option>General</option><option>BP Tablet</option>
+              <option>Sugar Tablet</option><option>Insulin</option>
+              <option>Asthma Inhaler</option><option>Pain Reliever</option><option>Antibiotic</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Dosage</label>
+            <input class="form-input" type="text" id="rx-dose" placeholder="e.g. 1 tablet"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Timing</label>
+            <input class="form-input" type="text" id="rx-timing" placeholder="e.g. After meals"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Duration</label>
+            <input class="form-input" type="text" id="rx-duration" placeholder="e.g. 5 days"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-input" id="rx-status">
+              <option value="active">Active</option><option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Instructions / Notes</label>
+          <textarea class="form-input" id="rx-notes" placeholder="Special instructions..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="addPrescription()">➕ Add Prescription</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Current Prescriptions</div>
+        <div id="prescription-list"><div style="font-size:12px;color:var(--text2);">No prescriptions added yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: REPORTS -->
+  <div class="tab-content" id="d-reports">
+    <div class="card">
+      <div class="card-title">Patient Reports</div>
+      <div id="doc-reports-list"><div style="font-size:12px;color:var(--text2);">No reports uploaded by patients yet.</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: ALERTS -->
+  <div class="tab-content" id="d-alerts">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Emergency Cases</div>
+        <div id="emergency-cases"><div class="alert alert-info">No emergency cases flagged at this time.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">SNS Alert Status</div>
+        <div id="doc-sns-status">
+          <div class="sns-status"><div class="sns-dot sns-ready"></div><div class="sns-label">System Ready</div><div class="sns-time">—</div></div>
+        </div>
+        <div class="card-title" style="margin-top:14px;">Alert Log</div>
+        <div class="sns-log" id="sns-log-doc">[ No alerts sent yet. ]</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: AI CHAT (Doctor) -->
+  <div class="tab-content" id="d-chat">
+    <div class="card">
+      <div class="card-title">AI Clinical Assistant</div>
+      <div class="chatbot-wrap">
+        <div class="chatbot-header">
+          <div class="chatbot-dot"></div>
+          <div style="font-size:13px;font-weight:500;">ClinicalBot</div>
+          <div style="font-size:11px;color:var(--purple);margin-left:6px;">Doctor Assistant</div>
+        </div>
+        <div class="chatbot-msgs" id="doc-chat-msgs">
+          <div class="chat-msg chat-bot">👨‍⚕️ Hello Doctor! I can help you with quick patient summaries, understanding recent vitals, report review support, and emergency situation guidance. What do you need?</div>
+        </div>
+        <div class="chatbot-input">
+          <input type="text" id="doc-chat-in" placeholder="Ask about a patient or clinical situation..." onkeydown="if(event.key==='Enter')sendDocChat()"/>
+          <button class="btn btn-primary btn-sm" onclick="sendDocChat()">Send</button>
+        </div>
+        <div class="chatbot-disclaimer">⚠️ AI assistant provides quick reference only. Clinical decisions must be made by the treating physician.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE: EMERGENCY
+══════════════════════════════════════════ -->
+<div class="page" id="page-emerg">
+  <div class="section-title" style="color:var(--red);">🚨 Emergency Center</div>
+  <div class="section-sub">Emergency contacts, advice and alert status in one place.</div>
+
+  <div class="grid2" style="margin-bottom:14px;">
+    <!-- HELPLINE CARD -->
+    <div class="helpline-card">
+      <div class="helpline-title">🚑 Emergency Helplines</div>
+      <div class="helpline-row"><div class="helpline-label">Ambulance</div><div class="helpline-num">108</div></div>
+      <div class="helpline-row"><div class="helpline-label">National Emergency</div><div class="helpline-num">112</div></div>
+      <div class="helpline-row"><div class="helpline-label">Police</div><div class="helpline-num">100</div></div>
+      <div class="helpline-row"><div class="helpline-label">Fire</div><div class="helpline-num">101</div></div>
+      <div class="helpline-row"><div class="helpline-label">Patient's Doctor</div><div class="helpline-num" id="em-doctor-num">—</div></div>
+      <div class="helpline-row"><div class="helpline-label">Emergency Contact</div><div class="helpline-num" id="em-family-num">—</div></div>
+      <div class="helpline-row"><div class="helpline-label">Last Alert Time</div><div class="helpline-num" id="em-alert-time" style="font-size:12px;">—</div></div>
+    </div>
+
+    <!-- ALERT STATUS -->
+    <div class="card">
+      <div class="card-title">Current Emergency Status</div>
+      <div id="em-current-status">
+        <div class="alert alert-success">✅ No active emergency detected at this time.</div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-danger btn-full" onclick="testEmergencyAlert()">🔔 Test Emergency Alert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY ADVICE -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-title">Emergency Advice</div>
+    <div class="advice-grid">
+      <div class="advice-card advice-do">
+        <div class="advice-title">✅ What To Do</div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Call your doctor immediately</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Call ambulance (108) if condition is severe</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Keep the patient calm and comfortable</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Check breathing rate and pulse</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Give prescribed emergency medicine if available</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Inform family members immediately</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Keep patient in safe, ventilated space</span></div>
+      </div>
+      <div class="advice-card advice-dont">
+        <div class="advice-title">❌ What NOT To Do</div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Do not panic — stay calm and act quickly</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Do not ignore warning signs or delay</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Do not give random medicine without prescription</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Do not leave patient alone in severe emergency</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Do not delay calling emergency services</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Do not move patient if neck/spine injury suspected</span></div>
+        <div class="advice-item"><div class="advice-dot"></div><span>Do not give food/water if patient is unconscious</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SNS CONFIG -->
+  <div class="card">
+    <div class="card-title">AWS SNS Emergency Alert Configuration</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Configure who receives emergency alerts. In production, these connect to your AWS SNS topic.</div>
+    <div class="grid2">
+      <div class="form-group">
+        <label class="form-label">Doctor Phone / Email (SNS)</label>
+        <input class="form-input" id="sns-doctor" type="text" placeholder="+91 9777777777 or doctor@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Family Contact (SNS)</label>
+        <input class="form-input" id="sns-family" type="text" placeholder="+91 9888888888 or family@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">SNS Topic ARN</label>
+        <input class="form-input" id="sns-arn" type="text" placeholder="arn:aws:sns:us-east-1:123456:HealthAlerts"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Alert Types</label>
+        <select class="form-input" id="sns-type">
+          <option>SMS + Email</option><option>SMS only</option><option>Email only</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSNSConfig()">💾 Save SNS Configuration</button>
+    <div id="sns-config-saved" style="margin-top:8px;"></div>
+    <div style="margin-top:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px;">Backend SNS Code (Node.js)</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);line-height:1.8;">
+        const {SNSClient,PublishCommand}=require("@aws-sdk/client-sns");<br/>
+        const sns=new SNSClient({region:process.env.AWS_REGION});<br/>
+        async function sendAlert(msg,patientId){<br/>
+        &nbsp;&nbsp;await sns.send(new PublishCommand({<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;TopicArn:process.env.SNS_TOPIC_ARN,<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;Message:`EMERGENCY: ${msg} | Patient: ${patientId}`,<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;Subject:"Health Emergency Alert"<br/>
+        &nbsp;&nbsp;}));<br/>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE: SYSTEM INFO
+══════════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="section-title">System Information</div>
+  <div class="section-sub">Module logic, registered users and application reference.</div>
+
+  <div class="grid2" style="margin-bottom:14px;">
+    <div class="card">
+      <div class="card-title">Heart Rate Logic</div>
+      <div style="font-size:12px;line-height:1.9;color:var(--text2);">
+        <div><strong style="color:var(--text);">Adults:</strong> &lt;60 Low · 60–100 Normal · &gt;100 High</div>
+        <div><strong style="color:var(--text);">Newborn:</strong> Normal 70–190 bpm</div>
+        <div><strong style="color:var(--text);">Infant:</strong> Normal 80–160 bpm</div>
+        <div><strong style="color:var(--text);">Toddler:</strong> Normal 80–130 bpm</div>
+        <div><strong style="color:var(--text);">Child:</strong> Normal 70–120 bpm</div>
+        <div><strong style="color:var(--text);">Teen:</strong> Normal 60–100 bpm</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Temperature &amp; Other Logic</div>
+      <div style="font-size:12px;line-height:1.9;color:var(--text2);">
+        <div><strong style="color:var(--blue);">&lt;95°F</strong> Low Temperature</div>
+        <div><strong style="color:var(--green);">97–99°F</strong> Normal</div>
+        <div><strong style="color:var(--amber);">99–100.4°F</strong> Mild Fever</div>
+        <div><strong style="color:var(--red);">&gt;100.4°F</strong> High Fever · ≥100 = Fever Detected</div>
+        <div><strong style="color:var(--red);">&gt;102°F</strong> High Risk / Emergency</div>
+        <div style="margin-top:6px;"><strong style="color:var(--text);">O₂:</strong> ≥95 Normal · 90–94 Low · &lt;90 Critical</div>
+        <div><strong style="color:var(--text);">Sugar:</strong> 70–140 Normal · &gt;140 High · &lt;70 Low</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-title">Registered Users</div>
+    <div id="admin-users-list">Loading...</div>
+    <button class="btn btn-sm" style="margin-top:10px;" onclick="renderAdminUsers()">🔄 Refresh</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Medical Disclaimer</div>
+    <div class="alert alert-warning">⚠️ This system shows <strong>possible conditions and risk indicators only</strong>. It does not provide final medical diagnosis. Medicine dosages shown require doctor confirmation. Always consult a qualified healthcare professional for all medical decisions.</div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════
+//  DATABASE LAYER — localStorage (simulates backend)
+// ══════════════════════════════════════════════════
+const DB = {
+  getUsers(){ try{return JSON.parse(localStorage.getItem('hm_users'))||[];}catch{return[];} },
+  saveUsers(u){ localStorage.setItem('hm_users',JSON.stringify(u)); },
+  getSession(){ try{return JSON.parse(localStorage.getItem('hm_session'))||null;}catch{return null;} },
+  saveSession(s){ localStorage.setItem('hm_session',JSON.stringify(s)); },
+  clearSession(){ localStorage.removeItem('hm_session'); },
+  getData(k){ try{return JSON.parse(localStorage.getItem('hm_'+k))||[];}catch{return[];} },
+  setData(k,v){ localStorage.setItem('hm_'+k,JSON.stringify(v)); }
+};
+
+function hashPw(pw){
+  let h=0;for(let i=0;i<pw.length;i++){h=((h<<5)-h)+pw.charCodeAt(i);h|=0;}
+  return 'h'+Math.abs(h).toString(36)+'_'+pw.length;
+}
+
+function seedDemo(){
+  const u=DB.getUsers();
+  if(u.find(x=>x.username==='patient1')) return;
+  DB.saveUsers([...u,
+    {id:'dp1',username:'patient1',name:'John Doe',email:'john@demo.com',
+     password:hashPw('pass123'),role:'patient',age:32,gender:'Male',
+     mobile:'+91 9876543210',emergencyContact:'+91 9876543211',
+     address:'12, MG Road, Hyderabad',history:'Mild hypertension, Type 2 diabetes',
+     createdAt:new Date().toISOString()},
+    {id:'dd1',username:'doctor1',name:'Dr. Sarah Khan',email:'sarah@demo.com',
+     password:hashPw('doc123'),role:'doctor',specialization:'Cardiologist',
+     experience:10,hospital:'City Medical Center',mobile:'+91 9777777777',
+     createdAt:new Date().toISOString()}
+  ]);
+}
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let currentUser=null;
+let regRole='patient';
+let prescriptions=[];
+let reports=[];
+let selfMeds=[];
+let snsAlerts=[];
+let lastVitals={};
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  if(id==='admin') renderAdminUsers();
+  window.scrollTo(0,0);
+}
+function showTab(group,tabId,el){
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll(`#${el.closest('.page').id} .tab-content`)
+    .forEach(t=>t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+}
+function goHome(){ showPage('landing'); }
+function gotoDashboard(){ if(currentUser) enterDashboard(currentUser); }
+
+// ══════════════════════════════════════════════════
+//  REGISTER
+// ══════════════════════════════════════════════════
+function showRegister(role){
+  switchRegRole(role||'patient');
+  showPage('register');
+}
+function switchRegRole(role){
+  regRole=role;
+  document.getElementById('rt-pat').classList.toggle('active',role==='patient');
+  document.getElementById('rt-doc').classList.toggle('active',role==='doctor');
+  document.getElementById('pat-fields').style.display=role==='patient'?'':'none';
+  document.getElementById('doc-fields').style.display=role==='doctor'?'':'none';
+}
+
+function handleRegister(){
+  const errBox=document.getElementById('reg-err'); errBox.style.display='none';
+  const name=v('r-name'), uname=v('r-user'), pw=v('r-pw'), cpw=v('r-cpw');
+  let ok=true;
+  if(!name){se('r-name','fe-r-name');ok=false;}
+  if(uname.length<3){se('r-user','fe-r-user');ok=false;}
+  if(pw.length<6){se('r-pw','fe-r-pw');ok=false;}
+  if(pw!==cpw){se('r-cpw','fe-r-cpw');ok=false;}
+  if(regRole==='patient'){
+    const age=parseInt(v('r-age'));
+    if(isNaN(age)||age<0||age>100){
+      document.getElementById('fe-r-age').textContent='Age must be between 0 and 100 years.';
+      se('r-age','fe-r-age');ok=false;
+    }
+    if(!v('r-gender')){se('r-gender','fe-r-gender');ok=false;}
+    if(!v('r-mobile')){se('r-mobile','fe-r-mobile');ok=false;}
+    if(!v('r-emcontact')){se('r-emcontact','fe-r-emcontact');ok=false;}
+  }
+  if(!ok) return;
+  const users=DB.getUsers();
+  if(users.find(u=>u.username.toLowerCase()===uname.toLowerCase())){
+    errBox.textContent='❌ Username already taken. Please choose another.';
+    errBox.style.display='block'; return;
+  }
+  const user={id:'u'+Date.now(),username:uname,name,email:v('r-email'),
+    password:hashPw(pw),role:regRole,createdAt:new Date().toISOString()};
+  if(regRole==='patient'){
+    Object.assign(user,{age:parseInt(v('r-age')),gender:v('r-gender'),
+      mobile:v('r-mobile'),emergencyContact:v('r-emcontact'),
+      address:v('r-address'),history:v('r-history')});
+  } else {
+    Object.assign(user,{specialization:v('r-spec'),experience:v('r-exp'),
+      hospital:v('r-hospital'),mobile:v('r-docmobile')});
+  }
+  users.push(user); DB.saveUsers(users);
+  showPage('login');
+  const ok2=document.getElementById('login-ok');
+  ok2.textContent=`✅ Account created! Welcome ${name}. Please login now.`;
+  ok2.style.display='block'; setTimeout(()=>ok2.style.display='none',5000);
+}
+
+// ══════════════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════════════
+function handleLogin(){
+  const errBox=document.getElementById('login-err'); errBox.style.display='none';
+  const uname=v('l-user'), pw=v('l-pw'); let ok=true;
+  if(!uname){se('l-user','fe-l-user');ok=false;}
+  if(!pw){se('l-pw','fe-l-pw');ok=false;}
+  if(!ok) return;
+  const user=DB.getUsers().find(u=>
+    u.username.toLowerCase()===uname.toLowerCase() && u.password===hashPw(pw));
+  if(!user){
+    errBox.textContent='❌ Incorrect username or password. Please try again.';
+    errBox.style.display='block'; return;
+  }
+  const s={id:user.id,username:user.username,name:user.name,role:user.role,
+    age:user.age,gender:user.gender,mobile:user.mobile,
+    emergencyContact:user.emergencyContact,address:user.address,history:user.history,
+    specialization:user.specialization,experience:user.experience,hospital:user.hospital};
+  DB.saveSession(s); currentUser=s;
+  enterDashboard(s);
+}
+
+function enterDashboard(user){
+  updateHeader(user);
+  // Update emergency contact numbers
+  document.getElementById('em-family-num').textContent=user.emergencyContact||'—';
+  if(user.role==='patient'){
+    document.getElementById('pat-name-display').textContent=user.name;
+    document.getElementById('pat-meta-display').textContent=
+      [user.age?'Age '+user.age:'',user.gender||'',user.mobile||''].filter(Boolean).join(' · ');
+    document.getElementById('pat-avatar').textContent=user.name[0].toUpperCase();
+    renderPatProfile(user);
+    renderPatMeds();
+    showPage('patient');
+  } else {
+    document.getElementById('doc-name-display').textContent=user.name;
+    document.getElementById('doc-meta-display').textContent=
+      [user.specialization||'',user.experience?user.experience+' yrs':'',user.hospital||''].filter(Boolean).join(' · ');
+    document.getElementById('doc-avatar').textContent=user.name[0].toUpperCase();
+    document.getElementById('em-doctor-num').textContent=user.mobile||'—';
+    renderDocPatients();
+    showPage('doctor');
+  }
+}
+
+function updateHeader(user){
+  document.getElementById('nav-chip').style.display='flex';
+  document.getElementById('nav-uname').textContent=user.name;
+  document.getElementById('nav-role').textContent='('+user.role+')';
+  document.getElementById('nav-dot').className='user-dot '+(user.role==='doctor'?'dot-doctor':'dot-patient');
+  ['nb-home','nb-dash','nb-emergency','nb-sysinfo','nb-logout'].forEach(id=>
+    document.getElementById(id).style.display='inline-flex');
+  document.getElementById('nb-dash').textContent=user.role==='doctor'?'Doctor Dashboard':'Patient Dashboard';
+}
+
+function logout(){
+  DB.clearSession(); currentUser=null;
+  ['nav-chip','nb-home','nb-dash','nb-emergency','nb-sysinfo','nb-logout'].forEach(id=>
+    document.getElementById(id).style.display='none');
+  showPage('landing');
+}
+
+// ══════════════════════════════════════════════════
+//  PATIENT PROFILE
+// ══════════════════════════════════════════════════
+function renderPatProfile(user){
+  document.getElementById('pat-profile-detail').innerHTML=`
+    <div class="grid2">
+      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">FULL NAME</div><div style="font-weight:500;">${user.name||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">USERNAME</div><div style="font-weight:500;">@${user.username||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">AGE</div><div style="font-weight:500;">${user.age!=null?user.age+' years':'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">GENDER</div><div style="font-weight:500;">${user.gender||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">MOBILE</div><div style="font-weight:500;">${user.mobile||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">EMERGENCY CONTACT</div><div style="font-weight:500;color:var(--red);">${user.emergencyContact||'—'}</div></div>
+      <div style="grid-column:span 2;"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">ADDRESS</div><div style="font-weight:500;">${user.address||'—'}</div></div>
+      <div style="grid-column:span 2;"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">DISEASE / MEDICAL HISTORY</div><div style="font-weight:500;color:var(--amber);">${user.history||'None reported'}</div></div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════
+//  DOCTOR: PATIENT LIST
+// ══════════════════════════════════════════════════
+function renderDocPatients(){
+  const patients=DB.getUsers().filter(u=>u.role==='patient');
+  const el=document.getElementById('doc-patient-list');
+  if(!patients.length){el.innerHTML='<div style="font-size:12px;color:var(--text2);">No patients registered yet.</div>';return;}
+  el.innerHTML=patients.map(p=>`
+    <div class="patient-row" onclick="selectPatient('${p.id}')">
+      <div class="pr-avatar">${p.name[0]}</div>
+      <div>
+        <div class="pr-name">${p.name}</div>
+        <div class="pr-meta">Age ${p.age||'—'} · ${p.gender||'—'} · ${p.mobile||'—'}</div>
+        ${p.history?`<div style="font-size:10px;color:var(--amber);margin-top:2px;">Hx: ${p.history}</div>`:''}
+      </div>
+      <div class="pr-right"><span class="badge badge-green">Active</span></div>
+    </div>`).join('');
+  // Also update prescription patient dropdown
+  const sel=document.getElementById('rx-patient-sel');
+  sel.innerHTML=patients.map(p=>`<option value="${p.id}">${p.name} (${p.username})</option>`).join('');
+}
+
+function selectPatient(pid){
+  const p=DB.getUsers().find(u=>u.id===pid); if(!p) return;
+  document.getElementById('doc-vitals-view').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px;">${p.name}</div>
+    <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+      Age: ${p.age||'—'} · Gender: ${p.gender||'—'}<br/>
+      Mobile: ${p.mobile||'—'}<br/>
+      Emergency: <span style="color:var(--red);">${p.emergencyContact||'—'}</span><br/>
+      History: <span style="color:var(--amber);">${p.history||'None'}</span>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text3);">Latest vitals will appear here when patient submits.</div>
+  `;
+}
+
+// ══════════════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════════════
+const REPORT_ICONS={'Blood Test':'🩸','BP Report':'❤️','Sugar Report':'🍬','Asthma / Respiratory':'🫁','Prescription':'💊','Scan / Imaging':'🔬','Other':'📄'};
+
+function simulateUpload(){
+  const el=document.querySelector('.upload-zone');
+  el.innerHTML='<div class="upload-icon">✅</div><div class="upload-text">File selected (demo)</div>';
+  setTimeout(()=>{el.innerHTML='<div class="upload-icon">📂</div><div class="upload-text">Click to upload report</div><div class="upload-sub">Supports PDF, JPG, PNG — Max 10MB</div>';},2000);
+}
+
+function addReport(){
+  const cat=document.getElementById('rpt-cat').value;
+  const name=document.getElementById('rpt-name').value.trim();
+  if(!cat||!name){alert('Please select category and enter report name.');return;}
+  const rpt={id:Date.now(),cat,name,date:new Date().toLocaleDateString(),by:currentUser?.name||'Patient'};
+  reports.push(rpt); renderReports();
+  document.getElementById('rpt-name').value='';
+  document.getElementById('rpt-cat').value='';
+}
+
+function renderReports(){
+  const html=reports.length?reports.map(r=>`
+    <div class="report-card">
+      <div class="report-icon">${REPORT_ICONS[r.cat]||'📄'}</div>
+      <div>
+        <div class="report-name">${r.name}</div>
+        <div class="report-meta">${r.cat} · ${r.date} · Uploaded by ${r.by}</div>
+      </div>
+      <div class="report-actions">
+        <button class="btn btn-sm btn-blue">👁 View</button>
+        <button class="btn btn-sm">⬇ Download</button>
+        <button class="btn btn-sm btn-danger" onclick="removeReport(${r.id})">×</button>
+      </div>
+    </div>`).join('')
+    :'<div style="font-size:12px;color:var(--text2);">No reports uploaded yet.</div>';
+  document.getElementById('reports-list').innerHTML=html;
+  const docEl=document.getElementById('doc-reports-list');
+  if(docEl) docEl.innerHTML=html;
+}
+
+function removeReport(id){ reports=reports.filter(r=>r.id!==id); renderReports(); }
+
+// ══════════════════════════════════════════════════
+//  MEDICATIONS
+// ══════════════════════════════════════════════════
+const MED_ICONS={'BP Tablet':'❤️','Sugar Tablet':'🍬','Insulin':'💉','Asthma Inhaler':'🫁','General':'💊','Pain Reliever':'🟡','Antibiotic':'🔵'};
+
+function addSelfMed(){
+  const name=document.getElementById('sm-name').value.trim();
+  const type=document.getElementById('sm-type').value;
+  if(!name){alert('Please enter medicine name.');return;}
+  selfMeds.push({id:Date.now(),name,type,
+    dose:document.getElementById('sm-dose').value.trim(),
+    time:document.getElementById('sm-time').value.trim(),
+    prescribedBy:'Self-tracked',status:'active'});
+  renderPatMeds();
+  ['sm-name','sm-dose','sm-time'].forEach(id=>document.getElementById(id).value='');
+}
+
+function renderPatMeds(){
+  const allMeds=[
+    ...prescriptions.map(p=>({...p,prescribedBy:'Doctor',icon:MED_ICONS[p.type||'General']||'💊'})),
+    ...selfMeds.map(m=>({...m,icon:MED_ICONS[m.type]||'💊'}))
+  ];
+  const el=document.getElementById('pat-meds-list');
+  if(!allMeds.length){el.innerHTML='<div style="font-size:12px;color:var(--text2);">No medications yet. Doctor prescriptions will appear here automatically.</div>';return;}
+  el.innerHTML=allMeds.map(m=>`
+    <div class="med-card">
+      <div class="med-icon">${m.icon}</div>
+      <div style="flex:1;">
+        <div class="med-name">${m.name}</div>
+        <div class="med-detail">
+          ${m.dose?'Dosage: '+m.dose+'<br/>':''}
+          ${m.timing||m.time?'Timing: '+(m.timing||m.time)+'<br/>':''}
+          ${m.duration?'Duration: '+m.duration+'<br/>':''}
+          Prescribed by: ${m.prescribedBy||'—'}
+        </div>
+      </div>
+      <div class="med-status"><span class="${m.status==='active'?'med-active':'med-inactive'}">${m.status||'active'}</span></div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  PRESCRIPTIONS
+// ══════════════════════════════════════════════════
+function addPrescription(){
+  const name=document.getElementById('rx-name').value.trim();
+  if(!name){alert('Please enter medicine name.');return;}
+  const rx={id:Date.now(),name,type:document.getElementById('rx-type').value,
+    dose:document.getElementById('rx-dose').value.trim(),
+    timing:document.getElementById('rx-timing').value.trim(),
+    duration:document.getElementById('rx-duration').value.trim(),
+    status:document.getElementById('rx-status').value,
+    notes:document.getElementById('rx-notes').value.trim(),
+    time:new Date().toLocaleString(),prescribedBy:currentUser?.name||'Doctor'};
+  prescriptions.push(rx); renderPrescriptions(); renderPatMeds();
+  ['rx-name','rx-dose','rx-timing','rx-duration','rx-notes'].forEach(id=>document.getElementById(id).value='');
+}
+
+function renderPrescriptions(){
+  const html=prescriptions.length?prescriptions.map(rx=>`
+    <div class="rx-card">
+      <div class="rx-header">
+        <div class="rx-name">💊 ${rx.name}</div>
+        <button class="btn btn-danger btn-sm" onclick="removeRx(${rx.id})">Remove</button>
+      </div>
+      <div class="rx-detail">📏 ${rx.dose||'—'} · ⏰ ${rx.timing||'—'} · 📅 ${rx.duration||'—'}</div>
+      ${rx.notes?`<div class="rx-detail">📝 ${rx.notes}</div>`:''}
+      <div style="margin-top:4px;display:flex;gap:6px;align-items:center;">
+        <span class="${rx.status==='active'?'med-active':'med-inactive'}">${rx.status}</span>
+        <span style="font-size:10px;color:var(--text3);">Added ${rx.time}</span>
+      </div>
+    </div>`).join('')
+    :'<div style="font-size:12px;color:var(--text2);">No prescriptions added yet.</div>';
+  document.getElementById('prescription-list').innerHTML=html;
+  document.getElementById('prescribed-medicines').innerHTML=prescriptions.length
+    ?prescriptions.map(rx=>`
+      <div class="med-card">
+        <div class="med-icon">${MED_ICONS[rx.type||'General']||'💊'}</div>
+        <div style="flex:1;">
+          <div class="med-name">${rx.name}</div>
+          <div class="med-detail">${rx.dose?'Dosage: '+rx.dose+'<br/>':''}${rx.timing?'Timing: '+rx.timing+'<br/>':''}${rx.duration?'Duration: '+rx.duration+'<br/>':''}Prescribed by: ${rx.prescribedBy}</div>
+        </div>
+        <div class="med-status"><span class="${rx.status==='active'?'med-active':'med-inactive'}">${rx.status}</span></div>
+      </div>`).join('')
+    +'<div class="alert alert-info" style="margin-top:8px;font-size:11px;">⚕️ Take medicines as directed by your doctor. Do not self-medicate.</div>'
+    :'<div style="font-size:12px;color:var(--text2);">No prescriptions yet.</div>';
+}
+function removeRx(id){ prescriptions=prescriptions.filter(r=>r.id!==id); renderPrescriptions(); renderPatMeds(); }
+
+// ══════════════════════════════════════════════════
+//  DOCTOR NOTES + EMERGENCY FLAG
+// ══════════════════════════════════════════════════
+function saveDoctorNotes(){
+  document.getElementById('notes-saved').innerHTML='<div class="alert alert-success">✅ Notes saved successfully.</div>';
+  setTimeout(()=>document.getElementById('notes-saved').innerHTML='',3000);
+}
+function markEmergency(){
+  triggerSNSAlert('DOCTOR FLAGGED EMERGENCY for patient');
+  document.getElementById('emergency-cases').innerHTML='<div class="alert alert-emergency">🚨 Doctor has marked this patient as an Emergency case. Immediate care required.</div>';
+  addDocSNSStatus('DOCTOR EMERGENCY FLAG');
+  showEmBanner('Doctor has flagged this as an emergency case.');
+  document.getElementById('notes-saved').innerHTML='<div class="alert alert-emergency">🚨 Emergency flagged. SNS alert triggered.</div>';
+}
+
+// ══════════════════════════════════════════════════
+//  VITALS ANALYSIS ENGINE
+// ══════════════════════════════════════════════════
+const HR_R={adult:{mn:60,mx:100},newborn:{mn:70,mx:190},infant:{mn:80,mx:160},
+  toddler:{mn:80,mx:130},child:{mn:70,mx:120},teen:{mn:60,mx:100}};
+
+function sBadge(lbl,type){
+  const c={Normal:'status-normal',Low:'status-low',High:'status-high',Critical:'status-critical'}[type]||'status-low';
+  return `<span class="vital-status ${c}">${lbl}</span>`;
+}
+function rBadge(lv){
+  const c={High:'risk-high',Medium:'risk-medium',Low:'risk-low'}[lv]||'risk-low';
+  return `<span class="risk-badge ${c}">${lv} Risk</span>`;
+}
+function aHR(val,grp){
+  const r=HR_R[grp]||HR_R.adult;
+  if(val<r.mn)return{s:'Low',t:'Low',risk:'possible bradycardia risk',lv:'Medium'};
+  if(val>r.mx)return{s:'High',t:'High',risk:'possible tachycardia risk',lv:'High'};
+  return{s:'Normal',t:'Normal',risk:null,lv:null};
+}
+function aTemp(val){
+  if(val<95)return{s:'Low Temperature',t:'Low',fever:false,em:false,risk:'possible hypothermia',lv:'High'};
+  if(val<=99)return{s:'Normal',t:'Normal',fever:false,em:false,risk:null,lv:null};
+  if(val<=100.4)return{s:'Mild Fever',t:'High',fever:true,em:false,risk:'possible infection / fever',lv:'Medium'};
+  if(val<=102)return{s:'High Fever',t:'High',fever:true,em:false,risk:'possible high fever / infection risk',lv:'High'};
+  return{s:'High Risk Fever 🚨',t:'Critical',fever:true,em:true,risk:'HIGH RISK FEVER — EMERGENCY',lv:'High'};
+}
+function aBP(raw){
+  const p=raw.split('/'); if(p.length<2)return null;
+  const sys=parseInt(p[0]),dia=parseInt(p[1]); if(isNaN(sys)||isNaN(dia))return null;
+  if(sys<90)return{s:'Low BP',t:'Low',risk:'possible hypotension risk',lv:'High',sys,dia};
+  if(sys<=120&&dia<80)return{s:'Normal',t:'Normal',risk:null,lv:null,sys,dia};
+  if(sys<=129)return{s:'Elevated',t:'High',risk:'possible elevated BP',lv:'Medium',sys,dia};
+  return{s:'High BP',t:'High',risk:'possible hypertension risk',lv:'High',sys,dia};
+}
+function aO2(val){
+  if(val>=95)return{s:'Normal',t:'Normal',risk:null,lv:null};
+  if(val>=90)return{s:'Low',t:'High',risk:'possible respiratory concern',lv:'Medium'};
+  return{s:'Critical Low 🚨',t:'Critical',risk:'possible severe respiratory emergency',lv:'High',em:true};
+}
+function aSugar(val){
+  if(val<70)return{s:'Low',t:'Low',risk:'possible hypoglycemia risk',lv:'High'};
+  if(val<=140)return{s:'Normal',t:'Normal',risk:null,lv:null};
+  if(val<=200)return{s:'High',t:'High',risk:'possible hyperglycemia risk',lv:'Medium'};
+  return{s:'Very High 🚨',t:'Critical',risk:'possible severe hyperglycemia — EMERGENCY',lv:'High',em:true};
+}
+
+function analyseVitals(){
+  const hr=parseFloat(document.getElementById('heartRate').value);
+  const bpRaw=document.getElementById('bloodPressure').value.trim();
+  const o2=parseFloat(document.getElementById('oxygen').value);
+  const sugar=parseFloat(document.getElementById('sugar').value);
+  const temp=parseFloat(document.getElementById('temperature').value);
+  const grp=document.getElementById('ageGroup').value;
+  let emgs=[],risks=[];
+
+  if(!isNaN(hr)){
+    const r=aHR(hr,grp);
+    el('v-hr').textContent=hr; el('s-hr').innerHTML=sBadge(r.s,r.t);
+    if(r.risk)risks.push({...r,vital:'Heart Rate',value:hr+' bpm'});
+    if(hr>150||hr<40)emgs.push('Heart rate critical: '+hr+' bpm');
+  }
+  if(bpRaw){
+    const r=aBP(bpRaw);
+    if(r){el('v-bp').textContent=bpRaw;el('s-bp').innerHTML=sBadge(r.s,r.t);
+      if(r.risk)risks.push({...r,vital:'Blood Pressure',value:bpRaw+' mmHg'});
+      if(r.sys>=180)emgs.push('Blood pressure critically high: '+bpRaw);}
+  }
+  if(!isNaN(o2)){
+    const r=aO2(o2);
+    el('v-o2').textContent=o2;el('s-o2').innerHTML=sBadge(r.s,r.t);
+    if(r.risk)risks.push({...r,vital:'Oxygen (SpO₂)',value:o2+'%'});
+    if(r.em)emgs.push('Oxygen critically low: '+o2+'%');
+  }
+  if(!isNaN(sugar)){
+    const r=aSugar(sugar);
+    el('v-su').textContent=sugar;el('s-su').innerHTML=sBadge(r.s,r.t);
+    if(r.risk)risks.push({...r,vital:'Blood Sugar',value:sugar+' mg/dL'});
+    if(r.em)emgs.push('Blood sugar dangerously high: '+sugar+' mg/dL');
+  }
+  if(!isNaN(temp)){
+    const r=aTemp(temp);
+    el('v-tmp').textContent=temp.toFixed(1);
+    const cls=r.t==='Critical'?'status-critical':r.t==='High'?'status-high':r.t==='Low'?'status-low':'status-normal';
+    el('s-tmp').innerHTML=`<span class="vital-status ${cls}">${r.s}</span>`;
+    if(r.fever)el('s-tmp').innerHTML+=`<span class="vital-status status-high" style="margin-left:4px;">Fever Detected</span>`;
+    if(r.risk)risks.push({...r,vital:'Temperature',value:temp.toFixed(1)+'°F'});
+    if(r.em)emgs.push('Temperature high risk: '+temp.toFixed(1)+'°F');
+    el('fever-guidance').innerHTML=r.fever?`<div class="fever-tip">🌡️ <strong>Fever:</strong> Paracetamol may help. Doctor consultation required.${grp!=='adult'?'<br/>⚠️ Child dosage depends on age/weight — doctor review required.':''}<br/><span style="font-size:10px;opacity:.7;">Not a prescription. Consult your doctor.</span></div>`:'';
+  }
+
+  const hasHigh=risks.some(r=>r.lv==='High');
+  const hasEm=emgs.length>0;
+  const ovEl=el('overall-status');
+  if(hasEm) ovEl.innerHTML='<span style="color:var(--red)">🚨 Emergency — Critical values detected. Seek immediate medical attention.</span>';
+  else if(hasHigh) ovEl.innerHTML='<span style="color:var(--amber)">⚠️ Concern — Some values need urgent doctor attention.</span>';
+  else if(risks.length) ovEl.innerHTML='<span style="color:var(--blue)">ℹ️ Monitor — Mild anomalies noted. Consult your doctor.</span>';
+  else ovEl.innerHTML='<span style="color:var(--green)">✅ All entered vitals appear within normal range.</span>';
+
+  el('condition-now').innerHTML=risks.length
+    ?risks.map(r=>`<div style="font-size:12px;margin-bottom:5px;color:var(--text);">• <strong>${r.vital}</strong>: ${r.value} → ${r.risk||''}</div>`).join('')
+    :'<div style="font-size:12px;color:var(--text2);">All entered vitals appear normal.</div>';
+
+  el('risk-list').innerHTML=risks.length?risks.map(r=>`
+    <div class="risk-row">${rBadge(r.lv)}
+      <div class="risk-info"><strong>${r.vital}</strong>: ${r.value}
+        <div class="risk-action">⚠️ ${r.risk||''} — Doctor review required.</div>
+      </div></div>`).join('')
+    :'<div style="font-size:12px;color:var(--text2);">No risk factors detected.</div>';
+
+  let acts=[];
+  if(hasEm){acts.push('🚨 <strong>Seek emergency care immediately</strong>');acts.push('🚑 Call ambulance: <strong>108</strong> or emergency services: <strong>112</strong>');}
+  if(hasHigh&&!hasEm){acts.push('👨‍⚕️ Schedule urgent doctor appointment today');}
+  if(risks.some(r=>r.vital==='Temperature'&&r.fever)){acts.push('💊 Paracetamol may help — confirm with doctor first');acts.push('🌡️ Monitor temperature every 2–4 hours');}
+  if(!acts.length){acts.push('✅ Continue monitoring regularly');acts.push('📅 Keep your next scheduled doctor visit');}
+  el('next-action').innerHTML=acts.map(a=>`<div style="font-size:12px;margin-bottom:5px;">${a}</div>`).join('');
+
+  updateDocView(risks,emgs);
+  if(emgs.length){emgs.forEach(m=>triggerSNSAlert(m));showEmBanner(emgs.join(' | '));}
+  else hideEmBanner();
+  lastVitals={hr,bp:bpRaw,o2,sugar,temp,grp,risks,emgs};
+  updateEmPage(emgs);
+}
+
+function updateDocView(risks,emgs){
+  const v=lastVitals;
+  let vhtml='<div style="font-size:12px;line-height:2;">';
+  if(v.hr)vhtml+=`<div>❤️ Heart Rate: <strong>${v.hr} bpm</strong> ${el('s-hr').innerHTML}</div>`;
+  if(v.bp)vhtml+=`<div>🩸 Blood Pressure: <strong>${v.bp}</strong> ${el('s-bp').innerHTML}</div>`;
+  if(v.o2)vhtml+=`<div>🫁 Oxygen: <strong>${v.o2}%</strong> ${el('s-o2').innerHTML}</div>`;
+  if(v.sugar)vhtml+=`<div>🍬 Blood Sugar: <strong>${v.sugar} mg/dL</strong> ${el('s-su').innerHTML}</div>`;
+  if(v.temp)vhtml+=`<div>🌡️ Temperature: <strong>${v.temp}°F</strong> ${el('s-tmp').innerHTML}</div>`;
+  vhtml+='</div>';
+  el('doc-vitals-view').innerHTML=vhtml||'<div style="font-size:12px;color:var(--text2);">No vitals yet.</div>';
+  el('doc-risk-summary').innerHTML=risks.length
+    ?risks.map(r=>`<div class="risk-row">${rBadge(r.lv)}<div class="risk-info">${r.vital}: ${r.value} — ${r.risk||''}<div class="risk-action">Doctor review required.</div></div></div>`).join('')
+    :'<div style="font-size:12px;color:var(--text2);">No risks detected.</div>';
+  if(emgs.length) el('emergency-cases').innerHTML=emgs.map(e=>`<div class="alert alert-emergency">🚨 ${e}</div>`).join('');
+}
+
+function updateEmPage(emgs){
+  if(emgs.length){
+    el('em-current-status').innerHTML=emgs.map(e=>`<div class="alert alert-emergency">🚨 ${e}</div>`).join('');
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  SNS + EMERGENCY BANNER
+// ══════════════════════════════════════════════════
+function triggerSNSAlert(msg){
+  const ts=new Date().toLocaleTimeString();
+  const line=`[${ts}] SNS ALERT → ${msg}`;
+  snsAlerts.push(line);
+  const slog=document.getElementById('sns-log');
+  if(slog){slog.innerHTML=snsAlerts.map(a=>`<div>${a}</div>`).join('');slog.scrollTop=slog.scrollHeight;}
+  addDocSNSStatus(msg);
+}
+function addDocSNSStatus(msg){
+  const ts=new Date().toLocaleTimeString();
+  const cont=document.getElementById('doc-sns-status');
+  if(!cont)return;
+  const div=document.createElement('div');
+  div.className='sns-status';
+  div.innerHTML=`<div class="sns-dot sns-sent"></div><div class="sns-label" style="font-size:12px;flex:1;">Alert sent: ${msg.substring(0,50)}...</div><div class="sns-time">${ts}</div>`;
+  cont.appendChild(div);
+  const dlog=document.getElementById('sns-log-doc');
+  if(dlog){dlog.innerHTML+=`<div>[${ts}] → ${msg}</div>`;dlog.scrollTop=dlog.scrollHeight;}
+}
+function clearAlerts(){snsAlerts=[];el('sns-log').innerHTML='[ Alerts cleared. ]';}
+function showEmBanner(msg){
+  const b=document.getElementById('em-banner');
+  if(b){b.classList.add('visible');el('em-msg').textContent=msg;
+    el('em-time').textContent='Alert time: '+new Date().toLocaleString();
+    el('em-alert-time').textContent=new Date().toLocaleString();}
+}
+function hideEmBanner(){const b=document.getElementById('em-banner');if(b)b.classList.remove('visible');}
+
+function testEmergencyAlert(){
+  triggerSNSAlert('TEST: Emergency alert triggered from Emergency Center');
+  showEmBanner('Test emergency alert — Please verify your SNS configuration.');
+  el('em-current-status').innerHTML='<div class="alert alert-emergency">🔔 Test alert triggered at '+new Date().toLocaleString()+'</div>';
+}
+function saveSNSConfig(){
+  el('sns-config-saved').innerHTML='<div class="alert alert-success">✅ SNS configuration saved.</div>';
+  setTimeout(()=>el('sns-config-saved').innerHTML='',3000);
+}
+
+// ══════════════════════════════════════════════════
+//  AI CHATBOT ENGINE
+// ══════════════════════════════════════════════════
+const CHAT_KB = {
+  'heart rate':  'Your heart rate shows how many times your heart beats per minute. Normal for adults is 60–100 bpm. Below 60 is low (bradycardia risk), above 100 is high (tachycardia risk). Always consult your doctor if outside normal range.',
+  'blood pressure': 'Blood pressure shows the force of blood in arteries. Normal is around 120/80 mmHg. High BP (≥130) is called hypertension. Low BP (<90 systolic) is hypotension. Both need doctor attention.',
+  'oxygen': 'Oxygen saturation (SpO₂) shows how much oxygen is in your blood. Normal is 95–100%. If it drops below 90%, this is a respiratory emergency — seek help immediately.',
+  'sugar': 'Blood sugar shows glucose levels. Normal fasting is 70–100 mg/dL. 70–140 is generally normal range. Above 140 may indicate hyperglycemia. Below 70 is hypoglycemia. Both need medical guidance.',
+  'temperature': 'Normal body temperature is about 98.6°F (37°C). Fever is 100°F or above. High fever is above 102°F and needs immediate medical attention. Paracetamol may help — confirm with doctor.',
+  'fever': 'Fever detected means temperature ≥100°F. Keep hydrated, rest, and take paracetamol if doctor approved. If temperature goes above 102°F, it is a medical emergency. Call doctor immediately.',
+  'emergency': 'If you see a critical alert: Call ambulance 108, call your doctor, keep patient calm, check breathing, give prescribed medicine if available. Do NOT panic or give random medicine.',
+  'medicine': 'Always take medicine exactly as prescribed by your doctor. Do not skip doses. Do not take someone else\'s medicine. Contact your doctor before stopping any medication.',
+  'ambulance': 'Ambulance number in India: 108. National Emergency: 112. Save these numbers in your phone. In emergency, call immediately and describe the situation clearly.',
+  'low oxygen': 'If oxygen is low: Sit upright, breathe slowly and deeply, open windows for fresh air, avoid exertion. If below 90% — this is an emergency. Call 108 immediately.',
+  'bp normal': `Based on the standard scale: Normal BP is 90–120/60–80 mmHg. If your systolic is above 130, consult your doctor. The system checks your entered BP value automatically.`,
+  'medicine reminder': 'Take your medicines at the same time every day. Set phone reminders. Never skip a dose. Keep a medicine diary. Refill prescriptions before they run out.',
+  'health tips': 'Daily health tips: Drink 8 glasses of water. Walk 30 minutes daily. Eat fresh vegetables and fruits. Avoid smoking and alcohol. Check vitals regularly. Sleep 7–8 hours.',
+  'warning signs': 'Emergency warning signs: Chest pain, difficulty breathing, sudden confusion, severe headache, very high or very low BP, oxygen below 90%, fever above 102°F. Call 108 immediately.',
+  'patient summary': 'To get patient summary: Check the Patients tab, select a patient, view their vitals and medical history. Recent readings and risk levels are shown clearly.',
+  'vitals': 'Vitals include Heart Rate, Blood Pressure, Oxygen Saturation, Blood Sugar, and Temperature. Each has a normal range. Values outside the range get Low/Normal/High labels and risk flags.',
+  'report': 'Reports can be uploaded in the Reports tab. Categories include Blood Test, BP Report, Sugar Report, Prescriptions and Scan documents. Doctor can review all uploaded reports.',
+};
+
+function chatResponse(msg, isDoctor=false){
+  const m=msg.toLowerCase();
+  for(const [key,resp] of Object.entries(CHAT_KB)){
+    if(m.includes(key)) return resp;
+  }
+  if(isDoctor) return `I can help with: patient summaries, vital sign interpretation, emergency guidance, report review support. Try asking about a specific vital sign or clinical situation. Remember: always apply your own clinical judgment.`;
+  return `I can help with: understanding health readings, medicine reminders, basic emergency advice, and health tips. Try asking about heart rate, blood pressure, oxygen, fever, or medicines. ⚠️ Always consult your doctor for serious concerns.`;
+}
+
+function addChatMsg(containerId, text, isUser){
+  const c=document.getElementById(containerId);
+  const d=document.createElement('div');
+  d.className='chat-msg '+(isUser?'chat-user':'chat-bot');
+  d.textContent=text;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+function sendPatChat(){
+  const inp=document.getElementById('pat-chat-in');
+  const msg=inp.value.trim(); if(!msg) return;
+  addChatMsg('pat-chat-msgs',msg,true); inp.value='';
+  setTimeout(()=>addChatMsg('pat-chat-msgs',chatResponse(msg,false),false),400);
+}
+function sendDocChat(){
+  const inp=document.getElementById('doc-chat-in');
+  const msg=inp.value.trim(); if(!msg) return;
+  addChatMsg('doc-chat-msgs',msg,true); inp.value='';
+  setTimeout(()=>addChatMsg('doc-chat-msgs',chatResponse(msg,true),false),400);
+}
+function quickChat(msg){
+  document.getElementById('pat-chat-in').value=msg;
+  showTab('p','p-chat',document.querySelector('#page-patient .tab:nth-child(4)'));
+  sendPatChat();
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN / USERS
+// ══════════════════════════════════════════════════
+function renderAdminUsers(){
+  const users=DB.getUsers();
+  const el2=document.getElementById('admin-users-list');
+  if(!users.length){el2.innerHTML='<div style="font-size:12px;color:var(--text2);">No users registered yet.</div>';return;}
+  el2.innerHTML=users.map(u=>`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border2);">
+      <div>
+        <strong style="font-size:13px;">${u.name}</strong>
+        <span class="badge ${u.role==='doctor'?'badge-purple':'badge-green'}" style="margin-left:6px;">${u.role}</span>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;">@${u.username}
+          ${u.age!=null?' · Age '+u.age:''}${u.gender?' · '+u.gender:''}
+          ${u.mobile?' · '+u.mobile:''}
+          ${u.specialization?' · '+u.specialization:''}
+          ${u.history?'<br/><span style="color:var(--amber);">Hx: '+u.history+'</span>':''}
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);">${new Date(u.createdAt).toLocaleDateString()}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  SAMPLE DATA
+// ══════════════════════════════════════════════════
+function loadSampleData(){
+  document.getElementById('heartRate').value=74;
+  document.getElementById('bloodPressure').value='118/76';
+  document.getElementById('oxygen').value=98;
+  document.getElementById('sugar').value=92;
+  document.getElementById('temperature').value=98.4;
+  document.getElementById('ageGroup').value='adult';
+  analyseVitals();
+}
+function loadCriticalData(){
+  document.getElementById('heartRate').value=142;
+  document.getElementById('bloodPressure').value='168/108';
+  document.getElementById('oxygen').value=87;
+  document.getElementById('sugar').value=285;
+  document.getElementById('temperature').value=103.8;
+  document.getElementById('ageGroup').value='adult';
+  analyseVitals();
+}
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+function el(id){return document.getElementById(id);}
+function v(id){return (document.getElementById(id)?.value||'').trim();}
+function se(inputId,errId){
+  document.getElementById(inputId)?.classList.add('error');
+  document.getElementById(errId)?.classList.add('show');
+}
+function ce(inputId){
+  document.getElementById(inputId)?.classList.remove('error');
+  const fe=document.getElementById('fe-'+inputId);
+  if(fe)fe.classList.remove('show');
+}
+function togglePw(id){
+  const e=document.getElementById(id);e.type=e.type==='password'?'text':'password';
+}
+
+// ══════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  seedDemo();
+  const s=DB.getSession();
+  if(s){currentUser=s;enterDashboard(s);}
+  else showPage('landing');
+  // Seed some demo meds
+  if(!prescriptions.length){
+    prescriptions=[
+      {id:1,name:'Amlodipine 5mg',type:'BP Tablet',dose:'1 tablet',timing:'Morning after breakfast',duration:'Ongoing',status:'active',notes:'Monitor BP daily',prescribedBy:'Dr. Sarah Khan',time:'Demo'},
+      {id:2,name:'Metformin 500mg',type:'Sugar Tablet',dose:'1 tablet twice',timing:'After meals',duration:'Ongoing',status:'active',notes:'Check sugar weekly',prescribedBy:'Dr. Sarah Khan',time:'Demo'}
+    ];
+    renderPrescriptions(); renderPatMeds();
+  }
+});
+</script>
+</body>
+</html>
