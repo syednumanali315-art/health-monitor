@@ -15,8 +15,11 @@ docker/
 kubernetes/
 monitoring/
 .github/
-docker-compose.yml
-Dockerfile
+# docker-compose.yml
+# Dockerfile
+!docker-compose.yml
+!**/Dockerfile
+!**/nginx.conf
 implementation_plan*
 task.md
 walkthrough.md
